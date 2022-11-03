@@ -26,4 +26,4 @@ def radix_sort(inp: "list[str]", alphabet="$abcdefghijklmnopqrstuvwxyz") -> "lis
 def alphabet_from_input_string(x: str) -> str:
     s = set(x)
     order = sorted(s)
-    return ''.join(order)
+    return '$' + ''.join(order)

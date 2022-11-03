@@ -3,6 +3,7 @@ import argparse
 from typing import Iterable
 from radix_sort import *
 from typing import NewType
+from parsers import parse_fasta, parse_fastq
 
 saidx = NewType("saidx", int)
 
@@ -15,6 +16,21 @@ def main():
     args = argparser.parse_args()
     print(f"Find every reads in {args.reads.name} " +
           f"in genome {args.genome.name}")
+
+    genome = parse_fasta(args.genome)
+    reads = parse_fastq(args.reads)
+
+    out = []
+    for chr in genome:
+        sa = sa_construction_simple_nsq(genome[chr])
+        for read in reads:
+            hits = pattern_match(genome[chr], reads[read], sa)
+            for hit in hits:
+                out.append(
+                    f'{read}\t{chr}\t{hit+1}\t{len(reads[read])}M\t{reads[read]}')
+
+    out.sort()
+    print('\n'.join(out))
 
 
 def sa_construction_nsq(x: str) -> list[int]:
@@ -31,6 +47,8 @@ def sa_construction_nsq(x: str) -> list[int]:
     one last O(n) running through sorted suffixes to get their starting index (because lazyness.)
     '''
     n = len(x)
+    if n == 0:
+        return []
     alpha = alphabet_from_input_string(x)
     suffixes = [x[i:]+i*'$' for i, _ in enumerate(x)]
 
@@ -74,6 +92,8 @@ def pattern_match(x: str, p: str, sa: list[int]) -> Iterable[int]:
     high = len(sa)
     low = 0
 
+    if len(p) == 0:
+        return []
     for i, a in enumerate(p):
         low = lower_bound(a, i, low, high, x, sa)
         high = upper_bound(a, i, low, high, x, sa)
@@ -99,7 +119,7 @@ def radix_by_index(x: str, u: list[int]) -> list[int]:
             buckets[bucket] = 0
         u, sa = sa, u
 
-    return
+    return None
 
 
 def skew(x: str) -> list[int]:
@@ -110,10 +130,8 @@ def skew(x: str) -> list[int]:
             sa_0.append(i)
         else:
             sa_12.append(i)
+    return None
 
 
 if __name__ == '__main__':
-    # main()
-    x = "mississippi$"
-    foo = sa_construction_nsq(x)
-    print(pattern_match(x, "s", foo))
+    main()
