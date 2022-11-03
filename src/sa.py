@@ -17,7 +17,7 @@ def main():
           f"in genome {args.genome.name}")
 
 
-def sa_construction_nsq(x: str) -> "list[int]":
+def sa_construction_nsq(x: str) -> list[int]:
     '''
     Suffix array construction in O(n^2), using radix sort
 
@@ -38,7 +38,7 @@ def sa_construction_nsq(x: str) -> "list[int]":
     return [n-len(x.split('$')[0])-1 for x in sort]
 
 
-def sa_construction_simple_nsq(x: str) -> "list[int]":
+def sa_construction_simple_nsq(x: str) -> list[int]:
     '''
     simple sa construction uing builtin strcmp and sort, for comparisson
     '''
@@ -48,6 +48,7 @@ def sa_construction_simple_nsq(x: str) -> "list[int]":
 
 
 def lower_bound(a: str, i: int, lo: int, hi: int, x: str, sa: list[int]) -> int:
+    ''' binary search suffix array for lower bound for occurence of character a at position i in a pattern, in string x, given Suffix array SA of x'''
     while hi > lo:
         mid = (hi+lo)//2
         if x[(sa[mid] + i) % len(x)] < a:
@@ -58,6 +59,7 @@ def lower_bound(a: str, i: int, lo: int, hi: int, x: str, sa: list[int]) -> int:
 
 
 def upper_bound(a: str, i: int, lo: int, hi: int, x: str, sa: list[int]) -> int:
+    ''' binary search suffix array for upper bound for occurence of character a at position i in a pattern, in string x, given Suffix array SA of x'''
     while hi > lo:
         mid = (hi+lo)//2
         if ord(x[(sa[mid] + i) % len(x)]) < ord(a)+1:
@@ -67,7 +69,8 @@ def upper_bound(a: str, i: int, lo: int, hi: int, x: str, sa: list[int]) -> int:
     return lo
 
 
-def pattern_match(x: str, p: str, sa: "list[int]") -> "Iterable[int]":
+def pattern_match(x: str, p: str, sa: list[int]) -> Iterable[int]:
+    ''' report all occurences of pattern p in string x, given Suffix array: SA of x. '''
     high = len(sa)
     low = 0
 
