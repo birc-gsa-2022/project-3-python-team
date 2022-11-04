@@ -47,13 +47,13 @@ def sa_construction_nsq(x: str) -> list[int]:
     one last O(n) running through sorted suffixes to get their starting index (because lazyness.)
     '''
     n = len(x)
-    if n == 0:
-        return []
     alpha = alphabet_from_input_string(x)
-    suffixes = [x[i:]+i*'$' for i, _ in enumerate(x)]
+    #suffixes = [x[i:]+i*'$' for i, _ in enumerate(x)]
+    x += '$'
+    suffixes = [suffix(x, i) for i, _ in enumerate(x)]
 
     sort = radix_sort(suffixes, alpha)
-    return [n-len(x.split('$')[0]) for x in sort]
+    return [x.i for x in sort]
 
 
 def sa_construction_simple_nsq(x: str) -> list[int]:
@@ -92,7 +92,7 @@ def pattern_match(x: str, p: str, sa: list[int]) -> Iterable[int]:
     high = len(sa)
     low = 0
 
-    if len(p) == 0:
+    if len(p) == 0 or len(x) == 0:
         return []
     for i, a in enumerate(p):
         low = lower_bound(a, i, low, high, x, sa)
@@ -157,7 +157,7 @@ def skew(x: str) -> list[int]:
             sa_2.append(i)
     sa_12.extend(sa_1)
     sa_12.extend(sa_2)
-    alpha = sorted(set(x))
+    alpha = {a: i for i, a in enumerate(sorted(set(x)))}
 
     sigma = radix_by_index(x, sa_12, alpha)
     inverse = {sigma[key]: key for key in sigma}
@@ -166,6 +166,7 @@ def skew(x: str) -> list[int]:
         triplets = get_triplet_map(x, sa_12)
         print(triplets)
         sa_12 = skew(''.join([inverse[triplets[trip]] for trip in sa_12]))
+
     else:
         special_case: list[int] = []
         buckets: dict[str, int] = {}
