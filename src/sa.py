@@ -14,15 +14,15 @@ def main():
     argparser.add_argument("genome", type=argparse.FileType('r'))
     argparser.add_argument("reads", type=argparse.FileType('r'))
     args = argparser.parse_args()
-    print(f"Find every reads in {args.reads.name} " +
-          f"in genome {args.genome.name}")
+    # print(f"Find every reads in {args.reads.name} " +
+    #      f"in genome {args.genome.name}")
 
     genome = parse_fasta(args.genome)
     reads = parse_fastq(args.reads)
 
     out = []
     for chr in genome:
-        sa = sa_construction_simple_nsq(genome[chr])
+        sa = sa_construction_nsq(genome[chr])
         for read in reads:
             hits = pattern_match(genome[chr], reads[read], sa)
             for hit in hits:
@@ -41,7 +41,7 @@ def sa_construction_nsq(x: str) -> list[int]:
     Put input string into a set O(n) -> sort set to make alphabet string O(n * alphabet)
      -alphabet size is bounded by n anyway.
     Buckets constructed as dict, in order of alphabet string. O(n)
-    Input string is split into suffixes, adding $ so each has length n, O(n*n) 
+    Input string is split into suffixes, adding $ so each has length n, O(n*n)
      -could get rid of slicing and just use index, but am lazy, and already implemented radix using strings (and we're n^2 anyway)
     radix sort suffixes O(n*n)
     one last O(n) running through sorted suffixes to get their starting index (because lazyness.)
@@ -53,7 +53,7 @@ def sa_construction_nsq(x: str) -> list[int]:
     suffixes = [x[i:]+i*'$' for i, _ in enumerate(x)]
 
     sort = radix_sort(suffixes, alpha)
-    return [n-len(x.split('$')[0])-1 for x in sort]
+    return [n-len(x.split('$')[0]) for x in sort]
 
 
 def sa_construction_simple_nsq(x: str) -> list[int]:
@@ -102,34 +102,97 @@ def pattern_match(x: str, p: str, sa: list[int]) -> Iterable[int]:
 
 
 # Work in progress below
-def radix_by_index(x: str, u: list[int]) -> list[int]:
-    alphabet = sorted(set(x))
+def radix_by_index(x: str, u: list[int], alphabet: list[str]) -> dict[str, str]:
     buckets = {i: 0 for i in alphabet}
+    triplets = get_triplet_map(x, u)
+
+    arr = [i for i in u]  # make copy so we don't override u
     sa = [0] * len(u)
     for i in range(3):
-        for trip in u:
-            buckets[x[trip + 3 - i]] += 1
+        for trip in arr:
+            buckets[triplets[trip][i]] += 1
         accsum = 0
         for bucket in buckets:
             buckets[bucket], accsum = accsum, accsum + buckets[bucket]
-        for trip in u:
-            sa[buckets[x[trip+3-i]]] = trip
-            buckets[x[trip+3-i]] += 1
+        for trip in arr:
+            sa[buckets[triplets[trip][i]]] = trip
+            buckets[triplets[trip][i]] += 1
         for bucket in buckets:
             buckets[bucket] = 0
-        u, sa = sa, u
+        arr, sa = sa, arr
 
-    return None
+    i = 0
+    sigma: dict[str, str] = {}
+    for trip in arr:
+        if triplets[trip] not in sigma:
+            sigma[triplets[trip]] = str(i)
+            i += 1
+    sigma = {str(sigma[key]): key for key in sigma}
+    return sigma
+
+
+def get_triplet_map(x: str, u: list[int]) -> dict[int, str]:
+    triplets: dict[int, str] = {}
+    for suf in u:
+        suffix = x[suf:]
+        if len(suffix) >= 3:
+            triplet = suffix[:3]
+        else:
+            triplet = suffix + (3-len(suffix)) * suffix[-1]
+        triplets[suf] = triplet
+    return triplets
 
 
 def skew(x: str) -> list[int]:
-    sa_0 = []
-    sa_12 = []
+    sa_0: list[int] = []
+    sa_1: list[int] = []
+    sa_2: list[int] = []
+    sa_12: list[int] = []
     for i, _ in enumerate(x):
         if i % 3 == 0:
             sa_0.append(i)
+        elif i % 3 == 1:
+            sa_1.append(i)
         else:
-            sa_12.append(i)
+            sa_2.append(i)
+    sa_12.extend(sa_1)
+    sa_12.extend(sa_2)
+    alpha = sorted(set(x))
+
+    sigma = radix_by_index(x, sa_12, alpha)
+    inverse = {sigma[key]: key for key in sigma}
+    if len(sigma) != len(sa_12):
+        print(sigma)
+        triplets = get_triplet_map(x, sa_12)
+        print(triplets)
+        sa_12 = skew(''.join([inverse[triplets[trip]] for trip in sa_12]))
+    else:
+        special_case: list[int] = []
+        buckets: dict[str, int] = {}
+        print(sigma)
+        for i in sigma:
+            buckets[i] = 0
+        for trip in sa_0:
+            if trip + 1 < len(x):
+                buckets[x[trip+1]] += 1
+            else:
+                special_case.append(trip)
+        accsum = 0
+        for bucket in buckets:
+            buckets[bucket], accsum = accsum, accsum + buckets[bucket]
+        arr: list[int] = [0] * (len(sa_0)-len(special_case))
+        for trip in sa_0:
+            if trip + 1 < len(x):
+                arr[buckets[x[trip+1]]] = trip
+                buckets[x[trip+1]] += 1
+        sa_0 = special_case
+        sa_0.extend(arr)
+    print(sa_0, sa_12)
+    # merge
+    i, j = 0, 0
+    while i < len(sa_12) and j < len(sa_0):
+        pass
+
     return None
 
 
