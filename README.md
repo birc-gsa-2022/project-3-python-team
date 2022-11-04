@@ -29,4 +29,21 @@ Once you have implemented the `sa` program (and tested it to the best of your ab
 
 ## Running time
 
-*List experiments and results that show that both the construction algorithm and the search algorithm works in the expected running time. Add figures by embedding them here, as you learned how to do in project 1.*
+The running time seems to behave as expected. The radix sort implementation of array construction should be O(n^2), and it is when run on data generated from a simple markov model using data_gen.py.
+
+*Insert array_construction_not_linearized.png*
+
+After dividing running times by $n^2$ for each datapoint we get a linear graph increasing with what is assumed to be the number of outputs (z)
+
+*insert array_construction_linearized.png*
+
+For the pattern matching we did a similar experiment using the exact same data and a random string of length 5 as the search pattern. It is expected to run in $O(m*log(n)+z)$. Since we are keeping m constant (5), the curve should be logarithmic. 
+
+*insert pattern_match_not_linearized.png*
+
+To test if the curve is indeed logarithmic the times are divided by $log(n)$.
+
+*insert pattern_match_linearized.png*
+
+There is a curve to this graph which we cannot explain. It might have something to do with the outputs (z).
+
