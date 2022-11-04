@@ -2,7 +2,7 @@ import time
 import argparse
 import numpy as np
 from parsers import parse_fasta, parse_fastq
-from sa import sa_construction_simple_nsq, pattern_match
+from sa import sa_construction_nsq, pattern_match
 import csv
 
 def main():
@@ -31,15 +31,15 @@ def time_construction_and_search(genome, reads):
     for chr in genome:
         print(len(genome[chr]))
         temp=[]
-        for i in range(1000):
+        for i in range(3):
             t=time.process_time()
-            sa = sa_construction_simple_nsq(genome[chr])
+            sa = sa_construction_nsq(genome[chr])
             temp.append(time.process_time()-t)
         out1.append(np.sum(temp))
         read_times=[]
         for read in reads:
             temp=[]
-            for i in range(1000):
+            for i in range(3):
                 t=time.process_time()
                 hits = pattern_match(genome[chr], reads[read], sa)
                 temp.append(time.process_time()-t)
